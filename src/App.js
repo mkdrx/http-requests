@@ -4,33 +4,61 @@ import MoviesList from "./components/MoviesList";
 import "./App.css";
 
 function App() {
-  // State updating function
+  // State updating function || Loading data | Handling errors
   const [movies, setMovies] = useState([]);
-
-  // State for loading data
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   async function fetchMoviesHandler() {
-    // When handler is called, sets the loading to true
+    // When handler is called, sets the loading to true and error to null
     setIsLoading(true);
+    setError(null);
+    try {
+      // Fetch the API
+      const response = await fetch("https://swapi.dev/api/films/");
 
-    // As a string the request - its a promise accessed by then() when a response (object) is given
-    const response = await fetch("https://swapi.dev/api/films/");
-    const data = await response.json();
+      // Check if the response was successful
+      if (!response.ok) {
+        throw new Error("Something went wrong!");
+      }
 
-    const transformedMovies = data.results.map((movieData) => {
-      return {
-        id: movieData.episode_id,
-        title: movieData.title,
-        openingText: movieData.opening_crawl,
-        releaseDate: movieData.release_date,
-      };
-    });
+      // Formatting the response
+      const data = await response.json();
 
-    setMovies(transformedMovies);
+      const transformedMovies = data.results.map((movieData) => {
+        return {
+          id: movieData.episode_id,
+          title: movieData.title,
+          openingText: movieData.opening_crawl,
+          releaseDate: movieData.release_date,
+        };
+      });
 
+      // Set movies state to the transformed data
+      setMovies(transformedMovies);
+
+      // In case it catches an error it sets error state with the message above (new Error)
+    } catch (error) {
+      setError(error.message);
+    }
     // After the process, want to set loading to false
     setIsLoading(false);
+  }
+
+  // Conditionals output - based on state
+
+  let content = <p>Found no movies.</p>;
+
+  if (movies.length > 0) {
+    content = <MoviesList movies={movies} />;
+  }
+
+  if (error) {
+    content = <p>Something went wrong!</p>;
+  }
+
+  if (isLoading) {
+    content = <p>Loading...</p>;
   }
 
   return (
@@ -38,14 +66,7 @@ function App() {
       <section>
         <button onClick={fetchMoviesHandler}>Fetch Movies</button>
       </section>
-      <section>
-        {/* Conditional to output movies based if not loading and we have movies*/}
-        {!isLoading && movies.length > 0 && <MoviesList movies={movies} />}
-        <MoviesList movies={movies} />
-        {/* Conditional if not loading and there are not movies */}
-        {!isLoading && movies.length === 0 && <p>Found no movies.</p>}
-        {isLoading && <p>Loading...</p>}
-      </section>
+      <section>{content}</section>
     </React.Fragment>
   );
 }
