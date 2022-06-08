@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 import MoviesList from "./components/MoviesList";
 import "./App.css";
@@ -9,7 +9,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  async function fetchMoviesHandler() {
+  // Using useCallback so fetchMoviesHandler function is not recreated unnecessarily
+  const fetchMoviesHandler = useCallback(async () => {
     // When handler is called, sets the loading to true and error to null
     setIsLoading(true);
     setError(null);
@@ -43,7 +44,13 @@ function App() {
     }
     // After the process, want to set loading to false
     setIsLoading(false);
-  }
+  }, []);
+
+  // Using useEffect so the function is called when the component is first rendered
+  // also when the dependency change
+  useEffect(() => {
+    fetchMoviesHandler();
+  }, [fetchMoviesHandler]);
 
   // Conditionals output - based on state
 
