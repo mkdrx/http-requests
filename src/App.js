@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 
 import MoviesList from "./components/MoviesList";
 import "./App.css";
+import AddMovie from "./components/AddMovie";
 
 function App() {
   // State updating function || Loading data | Handling errors
@@ -16,7 +17,9 @@ function App() {
     setError(null);
     try {
       // Fetch the API
-      const response = await fetch("https://swapi.dev/api/films/");
+      const response = await fetch(
+        "https://react-http-cd176-default-rtdb.europe-west1.firebasedatabase.app/movies.json"
+      );
 
       // Check if the response was successful
       if (!response.ok) {
@@ -26,17 +29,19 @@ function App() {
       // Formatting the response
       const data = await response.json();
 
-      const transformedMovies = data.results.map((movieData) => {
-        return {
-          id: movieData.episode_id,
-          title: movieData.title,
-          openingText: movieData.opening_crawl,
-          releaseDate: movieData.release_date,
-        };
-      });
+      // Array empty - will be filled by objects
+      const loadedMovies = [];
+      for (const key in data) {
+        loadedMovies.push({
+          id: key,
+          title: data[key].title,
+          openingText: data[key].openingText,
+          releaseDate: data[key].releaseDate,
+        });
+      }
 
       // Set movies state to the transformed data
-      setMovies(transformedMovies);
+      setMovies(loadedMovies);
 
       // In case it catches an error it sets error state with the message above (new Error)
     } catch (error) {
@@ -51,6 +56,23 @@ function App() {
   useEffect(() => {
     fetchMoviesHandler();
   }, [fetchMoviesHandler]);
+
+  // Add movie handler to send a POST request - by default is GET, can add second argument and change the method, add the content and define headers
+  // the content has to be json, therefore using JSON object and call stringify
+  async function addMovieHandler(movie) {
+    const response = await fetch(
+      "https://react-http-cd176-default-rtdb.europe-west1.firebasedatabase.app/movies.json",
+      {
+        method: "POST",
+        body: JSON.stringify(movie),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const data = await response.json();
+    console.log(data);
+  }
 
   // Conditionals output - based on state
 
@@ -70,6 +92,9 @@ function App() {
 
   return (
     <React.Fragment>
+      <section>
+        <AddMovie onAddMovie={addMovieHandler} />
+      </section>
       <section>
         <button onClick={fetchMoviesHandler}>Fetch Movies</button>
       </section>
